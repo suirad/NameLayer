@@ -46,7 +46,7 @@ public class SetDefaultGroup extends PlayerCommandMiddle{
 		}
 		
 		GroupPermission gPerm = gm.getPermissionforGroup(g);
-		if (!gPerm.isAccessible(pType, PermissionType.BLOCKS)){
+		if (!gPerm.isAccessible(pType, PermissionType.getType("BLOCKS"))){
 			p.sendMessage(ChatColor.RED + "You do not have permission to default that group.");
 			return true;
 		}
@@ -69,9 +69,9 @@ public class SetDefaultGroup extends PlayerCommandMiddle{
 			return null;
 
 		if (args.length == 1)
-			return GroupTabCompleter.complete(args[0], PermissionType.BLOCKS, (Player) sender);
+			return GroupTabCompleter.complete(args[0], PermissionType.getType("BLOCKS"), (Player) sender);
 		else{
-			return GroupTabCompleter.complete(null, PermissionType.BLOCKS, (Player)sender);
+			return GroupTabCompleter.complete(null, PermissionType.getType("BLOCKS"), (Player)sender);
 		}
 	}
 }
