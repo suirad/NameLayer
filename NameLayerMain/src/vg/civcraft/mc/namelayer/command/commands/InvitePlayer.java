@@ -5,6 +5,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -43,8 +48,7 @@ public class InvitePlayer extends PlayerCommandMiddle{
 		final Player p = isPlayer ? (Player)s : null;
 		final boolean isAdmin = !isPlayer || p.hasPermission("namelayer.admin");
 		final Group group = gm.getGroup(targetGroup);
-		if (group == null){
-			s.sendMessage(ChatColor.RED + "That group does not exist.");
+		if (groupIsNull(s, targetGroup, group)) {
 			return true;
 		}
 		if (!isAdmin && group.isDisciplined()) {
@@ -125,27 +129,43 @@ public class InvitePlayer extends PlayerCommandMiddle{
 			// invitee is online
 			if (shouldAutoAccept) {
 				// player auto accepts invite
-				group.addMember(invitedPlayer, pType);
+				if (saveToDB) {
+					group.addMember(invitedPlayer, pType);
+				}
+				else {
+					NameAPI.getGroupManager().invalidateCache(group.getName());
+				}
 				invitee.sendMessage(
 						ChatColor.GREEN + " You have auto-accepted invite to the group: " + group.getName());
 			} else {
 				group.addInvite(invitedPlayer, pType, saveToDB);
 				PlayerListener.addNotification(invitedPlayer, group);
+				String msg;
 				if(inviter != null){
 					String inviterName = NameAPI.getCurrentName(inviter);
-					invitee.sendMessage(ChatColor.GREEN + "You have been invited to the group " + group.getName()
+					msg = "You have been invited to the group " + group.getName()
 							+ " by " + inviterName + ".\n" + "Use the command /nlag <group> to accept.\n"
-							+ "If you wish to toggle invites so they always are accepted please run /nltaai");
+							+ "If you wish to toggle invites so they always are accepted please run /nltaai";
 				} else {
-					invitee.sendMessage(ChatColor.GREEN + "You have been invited to the group " + group.getName()+ ".\n" 
+					msg = "You have been invited to the group " + group.getName()+ ".\n" 
 					+ "Use the command /nlag <group> to accept.\n"
-					+ "If you wish to toggle invites so they always are accepted please run /nltaai");
+					+ "If you wish to toggle invites so they always are accepted please run /nltaai";
 				}
+				TextComponent message = new TextComponent(msg + "Click this message to accept");
+				message.setColor(net.md_5.bungee.api.ChatColor.GREEN);
+				message.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/nlag " + group.getName()));
+				message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("  ---  Click to accept").create()));
+				invitee.spigot().sendMessage(message);
 			}
 		} else {
 			// invitee is offline or on a different shard
 			if (shouldAutoAccept) {
-				group.addMember(invitedPlayer, pType);
+				if (saveToDB) {
+					group.addMember(invitedPlayer, pType);
+				}
+				else {
+					NameAPI.getGroupManager().invalidateCache(group.getName());
+				}
 			} else {
 				// Player did not auto accept
 				group.addInvite(invitedPlayer, pType, saveToDB);
