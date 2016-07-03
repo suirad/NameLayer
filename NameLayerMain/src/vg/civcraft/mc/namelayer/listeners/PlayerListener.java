@@ -15,14 +15,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import vg.civcraft.mc.namelayer.GroupManager;
-import vg.civcraft.mc.namelayer.GroupManager.PlayerType;
 import vg.civcraft.mc.namelayer.NameAPI;
 import vg.civcraft.mc.namelayer.NameLayerPlugin;
 import vg.civcraft.mc.namelayer.database.GroupManagerDao;
 import vg.civcraft.mc.namelayer.group.Group;
 import vg.civcraft.mc.namelayer.misc.Mercury;
-import vg.civcraft.mc.namelayer.permission.GroupPermission;
-import vg.civcraft.mc.namelayer.permission.PermissionType;
 
 public class PlayerListener implements Listener{
 
@@ -37,12 +34,6 @@ public class PlayerListener implements Listener{
 			handleFirstJoin(p);
 		}
 		GroupManagerDao db = NameLayerPlugin.getGroupManagerDao();
-		
-		for (String groupName : db.getGroupNames(uuid)){
-			Group group = GroupManager.getGroup(groupName);
-			GroupPermission perm = new GroupPermission(group);
-			PlayerType ptype = group.getPlayerType(uuid);
-		}
 		
 		if (!notifications.containsKey(uuid) || notifications.get(uuid).isEmpty())
 			return;

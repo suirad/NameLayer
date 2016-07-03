@@ -1,6 +1,7 @@
 package vg.civcraft.mc.namelayer.command.TabCompleters;
 
-import vg.civcraft.mc.namelayer.GroupManager;
+import vg.civcraft.mc.namelayer.group.Group;
+import vg.civcraft.mc.namelayer.permission.PlayerType;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -13,12 +14,12 @@ import java.util.List;
 public class MemberTypeCompleter {
 
 
-    public static List<String> complete(String lastArg) {
-        GroupManager.PlayerType[] types = GroupManager.PlayerType.values();
+    public static List<String> complete(Group g, String lastArg) {
+        
         List<String> type_strings = new LinkedList<>();
         List<String> result = new LinkedList<>();
 
-        for (GroupManager.PlayerType type: types){
+        for (PlayerType type: g.getPlayerTypeHandler().getAllTypes()){
             type_strings.add(type.toString());
         }
 
