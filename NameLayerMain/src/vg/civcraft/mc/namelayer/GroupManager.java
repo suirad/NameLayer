@@ -2,11 +2,9 @@ package vg.civcraft.mc.namelayer;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -23,7 +21,6 @@ import vg.civcraft.mc.namelayer.group.Group;
 import vg.civcraft.mc.namelayer.misc.Mercury;
 import vg.civcraft.mc.namelayer.permission.PermissionType;
 import vg.civcraft.mc.namelayer.permission.PlayerType;
-import vg.civcraft.mc.namelayer.permission.PlayerTypeHandler;
 
 public class GroupManager{
 	
@@ -57,7 +54,6 @@ public class GroupManager{
 				event.getGroupName(), event.getOwner(), 
 				event.getPassword());
 		if (id > -1) {
-			initiateDefaultPerms(group); // give default perms to a newly create group
 			GroupManager.getGroup(id); // force a recache from DB.
 			/*group.setGroupIds(groupManagerDao.getAllIDs(event.getGroupName()));
 			group.addMember(event.getOwner(), PlayerType.OWNER);
@@ -337,28 +333,6 @@ public class GroupManager{
 			return new ArrayList<String>();
 		}
 		return groupManagerDao.getGroupNames(uuid);
-	}
-	
-	private void initiateDefaultPerms(Group group){
-		if (group == null) {
-			NameLayerPlugin.getInstance().getLogger().log(Level.INFO, "initiateDefaultPerms failed, caller passed in null", new Exception());
-			return;
-		}
-		PlayerTypeHandler typeHandler = group.getPlayerTypeHandler();
-		Map <PlayerType, List <PermissionType>> defaultPermMapping = new HashMap<PlayerType, List<PermissionType>>();
-		for(PermissionType perm : PermissionType.getAllPermissions()) {
-			for(PlayerType type : perm.getDefaultPermLevels()) {
-				List <PermissionType> perms = defaultPermMapping.get(type);
-				if (perms == null) {
-					perms = new LinkedList<PermissionType>();
-					defaultPermMapping.put(type, perms);
-				}
-				perms.add(perm);
-			}
-		}
-		for (Entry <PlayerType, List <PermissionType>> entry: defaultPermMapping.entrySet()){
-			groupManagerDao.addPermission(group, entry.getKey(), entry.getValue());
-		}
 	}
 	
 	public String getDefaultGroup(UUID uuid){

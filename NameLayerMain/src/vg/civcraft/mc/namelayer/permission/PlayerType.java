@@ -79,15 +79,11 @@ public class PlayerType {
 	}
 
 	public boolean addPermission(PermissionType perm) {
-		if (parent == null) {
-			// is root and shouldnt be modified
-			return false;
-		}
 		if (perms.contains(perm)) {
 			// already exists
 			return false;
 		}
-		if (!parent.hasPermission(perm)) {
+		if (parent != null && !parent.hasPermission(perm)) {
 			// would create inconsistent perm structure
 			return false;
 		}

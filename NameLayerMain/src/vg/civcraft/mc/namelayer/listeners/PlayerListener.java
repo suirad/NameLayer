@@ -89,13 +89,12 @@ public class PlayerListener implements Listener{
 		if (!NameLayerPlugin.createGroupOnFirstJoin()) {
 			return;
 		}
-		GroupManager gm = NameAPI.getGroupManager();
 		Group g = null;
-		if (gm.getGroup(p.getName()) == null) {
+		if (GroupManager.getGroup(p.getName()) == null) {
 			g = createNewFriendGroup(p.getName(), p.getUniqueId());
 		}
 		for(int i = 0; i < 20 && g == null ; i++) {
-			if (gm.getGroup(p.getName() + String.valueOf(i)) == null) {
+			if (GroupManager.getGroup(p.getName() + String.valueOf(i)) == null) {
 				g = createNewFriendGroup(p.getName() + String.valueOf(i), p.getUniqueId());
 			}
 		}

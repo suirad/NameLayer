@@ -48,7 +48,7 @@ public class Group {
 		this.owner = owner;
 		this.isDisciplined = disciplined;
 		
-		playerTypeHandler = db.getPermissions(name);
+		playerTypeHandler = db.getPermissions(this);
 		players = db.getAllMembers(name, playerTypeHandler);
 		
 		// This returns list of ids w/ id holding largest # of players at top.
