@@ -22,7 +22,7 @@ public class MemberTypeCompleter {
 		}
 
 		for (PlayerType type : g.getPlayerTypeHandler().getAllTypes()) {
-			type_strings.add(type.toString());
+			type_strings.add(type.getName());
 		}
 
 		if (lastArg != null) {

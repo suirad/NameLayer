@@ -301,7 +301,7 @@ public class GroupManagerDao {
 		if (ver == 11) {
 			long first_time = System.currentTimeMillis();
 			log(Level.INFO, "Database updating to version twelve, reworking player type system");
-			db.execute("create table if not exists groupPlayerTypes(group_id int not null,type_id int not null,type_name varchar(40) not null, parent_id int primary key(group_id,type_id));");
+			db.execute("create table if not exists groupPlayerTypes(group_id int not null,type_id int not null,type_name varchar(40) not null, parent_id int, primary key(group_id,type_id));");
 			//update group member table
 			db.execute("alter table faction_member add type_id int");
 			db.execute("update faction_member set type_id=0 where role='OWNER';");
@@ -315,7 +315,9 @@ public class GroupManagerDao {
 			db.execute("alter table faction_member drop column role;");
 			
 			//update permission table
+			db.execute("alter table permissionByGroup drop primary key;");
 			db.execute("alter table permissionByGroup add type_id int");
+			db.execute("alter table permissionByGroup add primary key (group_id,perm_id,type_id);");
 			db.execute("update permissionByGroup set type_id=0 where role='OWNER';");
 			db.execute("update permissionByGroup set type_id=1 where role='ADMINS';");
 			db.execute("update permissionByGroup set type_id=2 where role='MODS';");
@@ -323,7 +325,7 @@ public class GroupManagerDao {
 			db.execute("update permissionByGroup set type_id=4 where role='NOT_BLACKLISTED';");
 			//maybe some broken entries exist, we make sure to clean those out
 			db.execute("UPDATE permissionByGroup SET type_id=-1 WHERE type_id IS NULL;");
-			db.execute("ALTER TABLE permissionByGroup ALTER COLUMN type_id INTEGER NOT NULL;");
+			db.execute("ALTER TABLE permissionByGroup MODIFY COLUMN type_id INTEGER NOT NULL;");
 			db.execute("alter table permissionByGroup drop column role;");
 			
 			//update invitation table
@@ -335,25 +337,18 @@ public class GroupManagerDao {
 			db.execute("update group_invitation set type_id=4 where role='NOT_BLACKLISTED';");
 			//maybe some broken entries exist, we make sure to clean those out
 			db.execute("UPDATE group_invitation SET type_id=-1 WHERE type_id IS NULL;");
-			db.execute("ALTER TABLE group_invitation ALTER COLUMN type_id INTEGER NOT NULL;");
+			db.execute("ALTER TABLE group_invitation MODIFY COLUMN type_id INTEGER NOT NULL;");
 			db.execute("alter table group_invitation drop column role;");
-			try {
-				//create default player types for every existing group
-				ResultSet groupSet = getAllGroupIds.executeQuery();
-				while (groupSet.next()) {
-					int id = groupSet.getInt(1);
-					String idString = String.valueOf(id);
-					db.execute("insert into groupPlayerTypes (group_id,type_id,type_name) values(" + idString + ",0,'OWNER');");
-					db.execute("insert into groupPlayerTypes (group_id,type_id,type_name) values(" + idString + ",1,'ADMINS');");
-					db.execute("insert into groupPlayerTypes (group_id,type_id,type_name) values(" + idString + ",2,'MODS');");
-					db.execute("insert into groupPlayerTypes (group_id,type_id,type_name) values(" + idString + ",3,'MEMBERS');");
-					db.execute("insert into groupPlayerTypes (group_id,type_id,type_name) values(" + idString + ",4,'DEFAULT');");
-					db.execute("insert into groupPlayerTypes (group_id,type_id,type_name) values(" + idString + ",5,'BLACKLISTED');");
-				}
-			} 
-			 catch (SQLException e) {
-				
-			}
+			
+			//init new default player types
+			db.execute("insert into groupPlayerTypes (group_id,type_id,type_name) select group_id, 0, 'OWNER' from faction_id;");
+			db.execute("insert into groupPlayerTypes (group_id,type_id,type_name,parent_id) select group_id, 1, 'ADMINS',0 from faction_id;");
+			db.execute("insert into groupPlayerTypes (group_id,type_id,type_name,parent_id) select group_id, 2, 'MODS',1 from faction_id;");
+			db.execute("insert into groupPlayerTypes (group_id,type_id,type_name,parent_id) select group_id, 3, 'MEMBERS',2 from faction_id;");
+			db.execute("insert into groupPlayerTypes (group_id,type_id,type_name,parent_id) select group_id, 4, 'DEFAULT',0 from faction_id;");
+			db.execute("insert into groupPlayerTypes (group_id,type_id,type_name,parent_id) select group_id, 5, 'BLACKLISTED',4 from faction_id;");
+			
+			ver = updateVersion(ver, plugin.getName());
 			log(Level.INFO, "Database update to Version twelve took " + (System.currentTimeMillis() - first_time) /1000 + " seconds.");
 		}
 		
@@ -1336,6 +1331,9 @@ public class GroupManagerDao {
 					g = GroupManager.getGroup(group);
 				}
 				else {
+					continue;
+				}
+				if (g == null) {
 					continue;
 				}
 				PlayerType type = null;

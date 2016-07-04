@@ -27,21 +27,21 @@ public class PlayerType {
 		this.children = new LinkedList<PlayerType>();
 		if (parent != null) {
 			// flat copy perms
-			this.perms = new LinkedList<PermissionType>(parent.perms);
+			this.perms = new ArrayList<PermissionType>(parent.perms);
 			parent.addChild(this);
-		}
-		else {
-			for(PermissionType perm : PermissionType.getAllPermissions()) {
-				//new root with all permissions
-				perms.add(perm);
-			}
+		} else {
+			// new root with all permissions
+			this.perms = new ArrayList<PermissionType>(
+					PermissionType.getAllPermissions());
+
 		}
 	}
-	
+
 	/**
 	 * For loading existing types
 	 */
-	public PlayerType(String name, int id, PlayerType parent, List <PermissionType> perms, Group group) {
+	public PlayerType(String name, int id, PlayerType parent,
+			List<PermissionType> perms, Group group) {
 		this.name = name;
 		this.parent = parent;
 		this.id = id;
@@ -60,7 +60,7 @@ public class PlayerType {
 	public String getName() {
 		return name;
 	}
-	
+
 	void setName(String name) {
 		this.name = name;
 	}
@@ -98,10 +98,11 @@ public class PlayerType {
 			return false;
 		}
 		perms.add(perm);
-		List <PermissionType> permList = new LinkedList<PermissionType>();
+		List<PermissionType> permList = new LinkedList<PermissionType>();
 		permList.add(perm);
 		if (saveToDb) {
-			NameLayerPlugin.getGroupManagerDao().addPermission(group.getName(), this, permList);
+			NameLayerPlugin.getGroupManagerDao().addPermission(group.getName(),
+					this, permList);
 		}
 		return true;
 	}
@@ -132,7 +133,8 @@ public class PlayerType {
 			}
 		}
 		if (saveToDb) {
-			NameLayerPlugin.getGroupManagerDao().removePermission(group.getName(), this, perm);
+			NameLayerPlugin.getGroupManagerDao().removePermission(
+					group.getName(), this, perm);
 		}
 		return true;
 	}
@@ -140,22 +142,23 @@ public class PlayerType {
 	public boolean hasPermission(PermissionType perm) {
 		return perms.contains(perm);
 	}
-	
-	public List <PermissionType> getAllPermissions() {
+
+	public List<PermissionType> getAllPermissions() {
 		return new LinkedList<PermissionType>(perms);
 	}
 
 	public int getId() {
 		return id;
 	}
-	
+
 	@Override
 	public boolean equals(Object o) {
 		if (!(o instanceof PlayerType)) {
 			return false;
 		}
 		PlayerType comp = (PlayerType) o;
-		return comp.getId() == this.getId() && comp.getName().equals(this.getName());
+		return comp.getId() == this.getId()
+				&& comp.getName().equals(this.getName());
 	}
 
 }
