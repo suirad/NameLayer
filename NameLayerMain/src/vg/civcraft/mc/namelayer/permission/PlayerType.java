@@ -4,8 +4,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import vg.civcraft.mc.namelayer.NameLayerPlugin;
+import vg.civcraft.mc.namelayer.group.Group;
+
 public class PlayerType {
 
+	private Group group;
 	private String name;
 	private int id;
 	private List<PlayerType> children;
@@ -15,10 +19,11 @@ public class PlayerType {
 	/**
 	 * For creating completly new types
 	 */
-	public PlayerType(String name, int id, PlayerType parent) {
+	public PlayerType(String name, int id, PlayerType parent, Group group) {
 		this.name = name;
 		this.parent = parent;
 		this.id = id;
+		this.group = group;
 		this.children = new LinkedList<PlayerType>();
 		if (parent != null) {
 			// flat copy perms
@@ -36,10 +41,11 @@ public class PlayerType {
 	/**
 	 * For loading existing types
 	 */
-	public PlayerType(String name, int id, PlayerType parent, List <PermissionType> perms) {
+	public PlayerType(String name, int id, PlayerType parent, List <PermissionType> perms, Group group) {
 		this.name = name;
 		this.parent = parent;
 		this.id = id;
+		this.group = group;
 		this.children = new LinkedList<PlayerType>();
 		this.perms = perms;
 		if (parent != null) {
@@ -53,6 +59,10 @@ public class PlayerType {
 
 	public String getName() {
 		return name;
+	}
+	
+	void setName(String name) {
+		this.name = name;
 	}
 
 	public List<PlayerType> getChildren() {
@@ -78,7 +88,7 @@ public class PlayerType {
 		}
 	}
 
-	public boolean addPermission(PermissionType perm) {
+	public boolean addPermission(PermissionType perm, boolean saveToDb) {
 		if (perms.contains(perm)) {
 			// already exists
 			return false;
@@ -88,7 +98,11 @@ public class PlayerType {
 			return false;
 		}
 		perms.add(perm);
-		// TODO save to db and update cache on other shards
+		List <PermissionType> permList = new LinkedList<PermissionType>();
+		permList.add(perm);
+		if (saveToDb) {
+			NameLayerPlugin.getGroupManagerDao().addPermission(group.getName(), this, permList);
+		}
 		return true;
 	}
 
@@ -101,7 +115,7 @@ public class PlayerType {
 		return types;
 	}
 
-	public boolean removePermission(PermissionType perm) {
+	public boolean removePermission(PermissionType perm, boolean saveToDb) {
 		if (parent == null) {
 			// is root and shouldnt be modified
 			return false;
@@ -114,10 +128,12 @@ public class PlayerType {
 		// enforce consistent structure by updating children
 		for (PlayerType type : getRecursiveChildren()) {
 			if (type.hasPermission(perm)) {
-				type.removePermission(perm);
+				type.removePermission(perm, saveToDb);
 			}
 		}
-		// TODO save to db and update cache on other shards
+		if (saveToDb) {
+			NameLayerPlugin.getGroupManagerDao().removePermission(group.getName(), this, perm);
+		}
 		return true;
 	}
 

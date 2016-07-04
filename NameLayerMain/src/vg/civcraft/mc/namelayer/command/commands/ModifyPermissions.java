@@ -69,7 +69,7 @@ public class ModifyPermissions extends PlayerCommandMiddle{
 			if (playerType.hasPermission(pType))
 				sender.sendMessage(ChatColor.RED + "This PlayerType already has the PermissionType: " + pType.getName());
 			else {
-				playerType.addPermission(pType);
+				playerType.addPermission(pType, true);
 				sender.sendMessage(ChatColor.GREEN + "The PermissionType: " + pType.getName() + " was successfully added to the PlayerType: " +
 				playerType.getName());
 				checkRecacheGroup(g);
@@ -77,7 +77,7 @@ public class ModifyPermissions extends PlayerCommandMiddle{
 		}
 		else if (info.equalsIgnoreCase("remove")){
 			if (playerType.hasPermission(pType)){
-				playerType.removePermission(pType);
+				playerType.removePermission(pType, true);
 				sender.sendMessage(ChatColor.GREEN + "The PermissionType: " + pType.getName() + " was successfully removed from" +
 						" the PlayerType: " + playerType.getName());
 				checkRecacheGroup(g);

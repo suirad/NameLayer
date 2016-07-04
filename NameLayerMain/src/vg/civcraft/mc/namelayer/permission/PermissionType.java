@@ -128,6 +128,8 @@ public class PermissionType {
 		registerPermission("MERGE", (LinkedList <Integer>)owner.clone(), "Allows merging this group into another or merging another group into this one");
 		//allows linking this group to another
 		registerPermission("LINKING", (LinkedList <Integer>)owner.clone(), "Allows linking this group to another group as a supergroup or a subgroup");
+		//allows creating, deleting and renaming player types
+		registerPermission("PLAYERTYPES", (LinkedList <Integer>)owner.clone(), "Allows creating, renaming and deleting player types for this group");
 		//allows opening the gui
 		registerPermission("OPEN_GUI", (LinkedList <Integer>)all.clone(), "Allows opening the GUI for this group");
 	}

@@ -1,7 +1,5 @@
 package vg.civcraft.mc.namelayer.gui;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.ChatColor;

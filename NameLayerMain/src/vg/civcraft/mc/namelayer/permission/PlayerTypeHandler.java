@@ -20,6 +20,7 @@ public class PlayerTypeHandler {
 	private PlayerType defaultPasswordJoinType;
 	private Map<String, PlayerType> typesByName;
 	private Map<Integer, PlayerType> typesById;
+	private final static int MAXIMUM_TYPE_COUNT = 27;
 	
 	public PlayerTypeHandler(PlayerType root, Group group, boolean saveToDb) {
 		this.root = root;
@@ -35,6 +36,15 @@ public class PlayerTypeHandler {
 
 	public boolean doesTypeExist(String name) {
 		return typesByName.get(name) != null;
+	}
+	
+	public int getUnusedId() {
+		for(int i = 0; i < MAXIMUM_TYPE_COUNT; i++) {
+			if (typesById.get(i) == null) {
+				return i;
+			}
+		}
+		return -1;
 	}
 	
 	public PlayerType getType(int id) {
@@ -69,9 +79,12 @@ public class PlayerTypeHandler {
 		return defaultPasswordJoinType;
 	}
 
-	public void deleteType(PlayerType type) {
+	public void deleteType(PlayerType type, boolean saveToD) {
 		typesByName.remove(type.getName());
 		typesById.remove(type.getId());
+		if (saveToD) {
+			NameLayerPlugin.getGroupManagerDao().removePlayerType(group, type);
+		}
 	}
 	
 	public boolean registerType(PlayerType type, boolean saveToDb) {
@@ -86,10 +99,6 @@ public class PlayerTypeHandler {
 		return true;
 	}
 	
-	public PlayerType getRoot() {
-		return root;
-	}
-	
 	public boolean isRelated(PlayerType child, PlayerType parent) {
 		PlayerType currentParent = child.getParent();
 		while(currentParent != null) {
@@ -101,47 +110,56 @@ public class PlayerTypeHandler {
 		return false;
 	}
 	
+	public void renameType(PlayerType type, String name) {
+		typesByName.remove(type.getName());
+		type.setName(name);
+		typesByName.put(name, type);
+		NameLayerPlugin.getGroupManagerDao().updatePlayerTypeName(group, type);
+	}
+	
 	public static PlayerTypeHandler createStandardTypes(Group g) {
-		PlayerType owner = new PlayerType("OWNER", 0, null);
+		PlayerType owner = new PlayerType("OWNER", 0, null, g);
 		PlayerTypeHandler handler = new PlayerTypeHandler(owner, g, true);
 		for(PermissionType perm : PermissionType.getAllPermissions()) {
-			owner.addPermission(perm);
+			owner.addPermission(perm, true);
 		}
-		PlayerType admin = new PlayerType("ADMINS", 1, owner);
+		PlayerType admin = new PlayerType("ADMINS", 1, owner, g);
 		handler.registerType(admin, true);
 		for(PermissionType perm : PermissionType.getAllPermissions()) {
 			if (perm.getDefaultPermLevels().contains(1)) {
-				admin.addPermission(perm);
+				admin.addPermission(perm, true);
 			}
 		}
-		PlayerType mod = new PlayerType("MODS", 2, admin);
+		PlayerType mod = new PlayerType("MODS", 2, admin, g);
 		handler.registerType(mod, true);
 		for(PermissionType perm : PermissionType.getAllPermissions()) {
 			if (perm.getDefaultPermLevels().contains(2)) {
-				mod.addPermission(perm);
+				mod.addPermission(perm, true);
 			}
 		}
-		PlayerType member = new PlayerType("MEMBERS", 3, mod);
+		PlayerType member = new PlayerType("MEMBERS", 3, mod, g);
 		handler.registerType(member, true);
 		for(PermissionType perm : PermissionType.getAllPermissions()) {
 			if (perm.getDefaultPermLevels().contains(3)) {
-				member.addPermission(perm);
+				member.addPermission(perm, true);
 			}
 		}
-		PlayerType defaultNonMember = new PlayerType("DEFAULT", 4, owner);
+		PlayerType defaultNonMember = new PlayerType("DEFAULT", 4, owner, g);
 		handler.registerType(defaultNonMember, true);
 		for(PermissionType perm : PermissionType.getAllPermissions()) {
 			if (perm.getDefaultPermLevels().contains(4)) {
-				defaultNonMember.addPermission(perm);
+				defaultNonMember.addPermission(perm, true);
 			}
 		}
-		PlayerType blacklisted = new PlayerType("BLACKLISTED", 5, defaultNonMember);
+		PlayerType blacklisted = new PlayerType("BLACKLISTED", 5, defaultNonMember, g);
 		handler.registerType(blacklisted, true);
 		for(PermissionType perm : PermissionType.getAllPermissions()) {
 			if (perm.getDefaultPermLevels().contains(5)) {
-				blacklisted.addPermission(perm);
+				blacklisted.addPermission(perm, true);
 			}
 		}
+		handler.defaultInvitationType = member;
+		handler.defaultPasswordJoinType = member;
 		return handler; 
 	}
 }

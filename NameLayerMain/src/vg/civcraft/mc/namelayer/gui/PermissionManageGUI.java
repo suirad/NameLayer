@@ -5,13 +5,11 @@ import java.util.List;
 import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
 
 import vg.civcraft.mc.civmodcore.inventorygui.Clickable;
 import vg.civcraft.mc.civmodcore.inventorygui.ClickableInventory;
@@ -140,9 +138,9 @@ public class PermissionManageGUI extends AbstractGroupGUI {
 										+ "for player type" + pType.toString()
 										+ " for " + g.getName() + "via gui");
 								if (hasPerm) {
-									pType.removePermission(perm);
+									pType.removePermission(perm, true);
 								} else {
-									pType.addPermission(perm);
+									pType.addPermission(perm, true);
 								}
 								checkRecacheGroup();
 							}

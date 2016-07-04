@@ -464,7 +464,7 @@ public class GroupManagerDao {
 	
 	private PreparedStatement addPermission, getPermission, removePermission, registerPermission, getPermissionMapping;
 	
-	private PreparedStatement getPlayerTypeRoot, addPlayerType, removePlayerType, getChildrenPlayerTypes;
+	private PreparedStatement getPlayerTypeRoot, addPlayerType, removePlayerType, renamePlayerType, getChildrenPlayerTypes;
 	
 	private PreparedStatement removePlayerTypeMember, removeInvitationByPlayerType;
 	
@@ -600,6 +600,7 @@ public class GroupManagerDao {
 				+ "where gpt.type_id=0 and gpt.parent_id is null and faction_id.group_name=?;");
 		
 		addPlayerType = db.prepareStatement("insert into groupPlayerTypes (group_id,type_id,type_name) values(select group_id, ?,? from faction_id where group_name =?);");
+		renamePlayerType = db.prepareStatement("update groupPlayerTypes gpt inner join faction_id fi on fi.group_id=gpt.group_id set gpt.type_name=? where gpt.type_id=? and fi.group_name=?;");
 		removePlayerType = db.prepareStatement("delete gpt from groupPlayerTypes gpt inner join faction_id f on f.group_id=gpt.group_id where gpt.type_id=? and f.group_name=?;");
 		removePlayerTypeMember = db.prepareStatement("delete fm from faction_member fm inner join faction_id fi on fi.group_id=fm.group_id where fi.group_name=? and fm.type_id=?;");
 		removeInvitationByPlayerType = db.prepareStatement("delete from group_invitation where groupName=? and type_id=?;");
@@ -955,9 +956,9 @@ public class GroupManagerDao {
 				return PlayerTypeHandler.createStandardTypes(group);
 			}
 			String rootName = rootNameSet.getString(1);
-			PlayerType root = new PlayerType(rootName, 0, null);
+			PlayerType root = new PlayerType(rootName, 0, null, group);
 			handler = new PlayerTypeHandler(root, group, false);
-			recursivelyLoadPlayerType(group.getName(), handler, root);
+			recursivelyLoadPlayerType(group, handler, root);
 		} catch (SQLException e) {
 			plugin.getLogger().log(Level.WARNING, "Problem getting permissions for group " + group, e);
 		}
@@ -993,18 +994,27 @@ public class GroupManagerDao {
 		} 
 	}
 	
-//	addPlayerType = db.prepareStatement("insert into groupPlayerTypes (group_id,type_id,type_name) values(select group_id, ?,? from faction_id where group_name =?);");
-//	removePlayerType = db.prepareStatement("delete gpt from groupPlayerTypes gpt inner join faction_id f on f.group_id=gpt.group_id where gpt.type_id=?;");
-	
-	private void recursivelyLoadPlayerType(String groupName, PlayerTypeHandler handler, PlayerType parentVertex) {
+	public synchronized void updatePlayerTypeName(Group g, PlayerType type) {
+		NameLayerPlugin.reconnectAndReintializeStatements();
 		try {
-			getChildrenPlayerTypes.setString(1, groupName);
+			renamePlayerType.setString(1, type.getName());
+			renamePlayerType.setInt(2, type.getId());
+			renamePlayerType.setString(3, g.getName());
+			renamePlayerType.execute();
+		} catch (SQLException e) {
+			plugin.getLogger().log(Level.WARNING, "Problem updating player type name for " + type.getName() + " with id " + type.getId() + " for group" + g.getName(), e);
+		} 
+	}
+
+	private void recursivelyLoadPlayerType(Group group, PlayerTypeHandler handler, PlayerType parentVertex) {
+		try {
+			getChildrenPlayerTypes.setString(1, group.getName());
 			getChildrenPlayerTypes.setInt(2, parentVertex.getId());
 			ResultSet childSet = getChildrenPlayerTypes.executeQuery();
 			while (childSet.next()) {
 				String childName = childSet.getString(1);
 				int childId = childSet.getInt(2);
-				getPermission.setString(1, groupName);
+				getPermission.setString(1, group.getName());
 				getPermission.setInt(2, childId);
 				ResultSet permSet = getPermission.executeQuery();
 				List <PermissionType> permList = new LinkedList<PermissionType>();
@@ -1017,12 +1027,12 @@ public class GroupManagerDao {
 					}
 					permList.add(perm);
 				}
-				PlayerType child = new PlayerType(childName, childId, parentVertex, permList);
+				PlayerType child = new PlayerType(childName, childId, parentVertex, permList, group);
 				handler.registerType(child, false);
-				recursivelyLoadPlayerType(groupName, handler, child);
+				recursivelyLoadPlayerType(group, handler, child);
 			}
 		} catch (SQLException e) {
-			plugin.getLogger().log(Level.WARNING, "Problem getting player types for group " + groupName, e);
+			plugin.getLogger().log(Level.WARNING, "Problem getting player types for group " + group.getName(), e);
 		}
 		//getChildrenPlayerTypes = db.prepareStatement("select gpt.type_name, gpt.type_id from groupPlayerTypes gpt inner join 
 		//faction_id fi on fi.group_id=gpt.group_id where fi.group_name=? and gpt.parent_id=?;");

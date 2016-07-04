@@ -13,25 +13,27 @@ import java.util.List;
  */
 public class MemberTypeCompleter {
 
+	public static List<String> complete(Group g, String lastArg) {
+		List<String> type_strings = new LinkedList<>();
+		List<String> result = new LinkedList<>();
 
-    public static List<String> complete(Group g, String lastArg) {
-        
-        List<String> type_strings = new LinkedList<>();
-        List<String> result = new LinkedList<>();
+		if (g == null) {
+			return result;
+		}
 
-        for (PlayerType type: g.getPlayerTypeHandler().getAllTypes()){
-            type_strings.add(type.toString());
-        }
+		for (PlayerType type : g.getPlayerTypeHandler().getAllTypes()) {
+			type_strings.add(type.toString());
+		}
 
-        if (lastArg != null) {
-            for(String type: type_strings){
-                if (type.toLowerCase().startsWith(lastArg.toLowerCase()))
-                    result.add(type);
-            }
-        } else {
-            result = type_strings;
-        }
+		if (lastArg != null) {
+			for (String type : type_strings) {
+				if (type.toLowerCase().startsWith(lastArg.toLowerCase()))
+					result.add(type);
+			}
+		} else {
+			result = type_strings;
+		}
 
-        return result;
-    }
+		return result;
+	}
 }
