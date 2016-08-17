@@ -23,7 +23,10 @@ public class ProfileModifier implements ProfileInterface{
 
 	public void setPlayerProfle(Player player) {
 		String name = associations.getCurrentName(player.getUniqueId());
+    System.out.println(player.getUniqueId());
+    System.out.println("Saved name:" + name);    
 		String oldName = player.getName();
+    System.out.println("Retrieved name:" + name);    
 		if (name.length() > 16) {
 			NameLayerPlugin
 					.log(Level.INFO,
